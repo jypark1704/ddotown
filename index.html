@@ -382,6 +382,12 @@ const DRAW={
   c.beginPath();c.moveTo(q[0]+3,q[1]-14);c.lineTo(q[0]+12,q[1]-4);c.lineTo(q[0]+9,q[1]+3);c.lineTo(q[0]+1,q[1]-3);c.closePath();c.fillStyle='#7d868b';c.fill();
   if(SNOW){c.beginPath();c.moveTo(q[0]-7,q[1]-11);c.lineTo(q[0]+3,q[1]-14);c.lineTo(q[0]+7,q[1]-9);c.lineTo(q[0]-4,q[1]-7);c.closePath();c.fillStyle='#fff';c.fill();}}
 };
+/* 그림 파일(assets/이름.png)이 있으면 코드 그림 대신 사용. l,r,b = 원본에서 바닥 마름모의 왼쪽·오른쪽·아래 꼭짓점 위치(0~1) */
+const SPR={shop:{l:37/1024,r:987/1024,b:838/1024}};
+for(const k in SPR){const i=new Image();i.onload=()=>{SPR[k].img=i;if(S)renderCards()};i.src='assets/'+k+'.png';}
+function drawObj(c,o){const sp=SPR[o.k];
+  if(sp&&sp.img){const s=D[o.k].s||1,w=TW*s/(sp.r-sp.l),h=w*sp.img.height/sp.img.width;c.drawImage(sp.img,-TW*s/2-sp.l*w,TH*s-sp.b*h,w,h);}
+  else DRAW[o.k](c,o);}
 const GRASS=['#8fd07c','#72bf62','#c7bd6c','#eaf0f3'];
 function drawGround(c,x,y,g){
   const se=season(), v=hash(x,y);
@@ -422,7 +428,7 @@ function render(){
   if(hover&&tool!=='hand'){const s=(D[tool].s||1), ok=tool==='doze'?!!(G(hover.x,hover.y)||{}).o:canPlace(tool,hover.x,hover.y);
     base(hover.x,hover.y);poly(ctx,[[0,0],[s,0],[s,s],[0,s]],ok?'#ffffff88':'#ff5a4a88');}
   const list=S.objs.filter(o=>o.k!=='road'&&vis(o.x,o.y,140)).sort((a,b)=>{const sa=(D[a.k].s||1)-1,sb=(D[b.k].s||1)-1;return (a.x+a.y+sa*2)-(b.x+b.y+sb*2)||a.x-b.x});
-  for(const o of list){base(o.x,o.y);DRAW[o.k](ctx,o);
+  for(const o of list){base(o.x,o.y);drawObj(ctx,o);
     if(NEED_ROAD[o.k]&&!o.ok){const s=(D[o.k].s||1)/2,q=P(s,s,46+Math.sin(T/250)*2);ctx.fillStyle='#d9534f';ctx.beginPath();ctx.arc(q[0],q[1],8,0,7);ctx.fill();
       ctx.fillStyle='#fff';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText('!',q[0],q[1]+4);}}
   ctx.textAlign='center';ctx.font='bold 13px sans-serif';
@@ -458,7 +464,7 @@ function renderCards(){
     else{const ic=document.createElement('canvas');ic.width=128;ic.height=104;const c=ic.getContext('2d');const s=d.s||1;
       if(s===2){c.setTransform(1,0,0,1,64,36);} else if(k==='tower'){c.setTransform(1,0,0,1,64,60)} else c.setTransform(2,0,0,2,64,k==='villa'?56:44);
       if(s===2&&k==='tower')c.setTransform(.9,0,0,.9,64,56);
-      if(k==='road'){poly(c,[[.1,.1],[.9,.1],[.9,.9],[.1,.9]],'#d8c39a');} else DRAW[k](c,{v:0,x:0,y:0});
+      if(k==='road'){poly(c,[[.1,.1],[.9,.1],[.9,.9],[.1,.9]],'#d8c39a');} else drawObj(c,{k,v:0,x:0,y:0});
       b.appendChild(ic);}
     b.insertAdjacentHTML('beforeend',`<div class="nm">${d.n}</div><div class="ct">${d.m?`💰${d.m}${d.w?` 🪵${d.w}`:''}`:'&nbsp;'}</div>`+(d.lv>S.level?`<span class="lk">Lv ${d.lv}</span>`:''));
     b.onclick=()=>{if(d.lv>S.level){toast(`레벨 ${d.lv}에 열려요`,'bad');return} tool=k;renderCards();
